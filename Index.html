@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Viewer/Editor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a1a; color: #e0e0e0; height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .header {
+      background: #0d47a1; color: white; padding: 12px; text-align: center;
+      font-size: 16px; font-weight: 600;
+    }
+    .editor-container {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    /* Sections */
+    .code-section,
+    .preview-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+    }
+    .code-section {
+      border-bottom: 2px solid #333;
+    }
+
+    .code-header,
+    .preview-header {
+      background: #212121; padding: 10px 12px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 500;
+    }
+    .header-left { display: flex; align-items: center; gap: 6px; flex: 1; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+
+    .code-controls {
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+    }
+    .btn {
+      background: #0288d1; color: white; border: none; padding: 6px 10px;
+      border-radius: 4px; font-size: 12px; cursor: pointer;
+    }
+    .btn:hover { background: #0277bd; }
+
+    .btn-green {
+      background: #4caf50;
+    }
+    .btn-green:hover { background: #45a049; }
+
+    .icon-btn {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: #333; color: #e0e0e0; border: none;
+      cursor: pointer; font-size: 14px;
+    }
+    .icon-btn:hover { background: #444; }
+
+    .code-area {
+      flex: 1; background: #0d1117; color: #d4d4d4;
+      border: none; padding: 15px; font-family: 'Consolas', monospace;
+      font-size: 14px; line-height: 1.5; resize: none; outline: none;
+    }
+    #preview {
+      width: 100%; height: calc(100% - 50px); border: none; background: white;
+    }
+    #file-input { display: none; }
+
+    /* Maximized states */
+    .max-code .code-section { flex: 1; }
+    .max-code .preview-section { display: none; }
+
+    .max-preview .preview-section { flex: 1; }
+    .max-preview .code-section { display: none; }
+
+    @media (max-width: 480px) {
+      .code-header, .preview-header { padding: 8px 10px; }
+      .code-controls { flex-wrap: wrap; }
+      .btn, .icon-btn { padding: 5px 8px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">HTML Code Editor & Viewer</div>
+
+  <div class="editor-container" id="layout">
+    <!-- Top: Code Editor -->
+    <div class="code-section">
+      <div class="code-header">
+        <div class="header-left">
+          <button class="icon-btn" id="toggleCode" title="Maximize editor">⛶</button>
+          <span>📝 HTML Editor</span>
+        </div>
+        <div class="header-right">
+          <div class="code-controls">
+            <button class="btn" onclick="selectAllCode()">Select All</button>
+            <button class="btn" onclick="copyCode()">Copy</button>
+            <button class="btn" onclick="document.getElementById('file-input').click()">Open .html</button>
+            <button class="btn" onclick="runCode()">▶ Run</button>
+          </div>
+          <input type="file" id="file-input" accept=".html,.htm" onchange="loadFile(event)">
+        </div>
+      </div>
+      <textarea id="code-input" class="code-area" placeholder="Enter your HTML code here...">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Test Page&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: Arial; padding: 20px; background: linear-gradient(45deg, #667eea 0%, #764ba2 100%); }
+    .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 400px; margin: 0 auto; text-align: center; }
+    h1 { color: #333; margin-bottom: 20px; }
+    button { background: #4caf50; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #45a049; transform: translateY(-2px); }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="card"&gt;
+    &lt;h1&gt;🎉 Hello World!&lt;/h1&gt;
+    &lt;p&gt;Your HTML preview works perfectly!&lt;/p&gt;
+    &lt;button onclick="alert('Button works!')"&gt;Test Button&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+      </textarea>
+    </div>
+
+    <!-- Bottom: Preview -->
+    <div class="preview-section">
+      <div class="preview-header">
+        <div class="header-left">
+          <button class="icon-btn" id="togglePreview" title="Maximize preview">⛶</button>
+          <span>👁️ Live Preview</span>
+        </div>
+        <div class="header-right">
+          <div class="preview-controls">
+            <button class="btn btn-green" onclick="runCode()">Refresh</button>
+            <button class="btn btn-green" onclick="saveFile()">💾 Save</button>
+          </div>
+        </div>
+      </div>
+      <iframe id="preview"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const codeInput = document.getElementById('code-input');
+    const preview = document.getElementById('preview');
+    const layout = document.getElementById('layout');
+    const toggleCodeBtn = document.getElementById('toggleCode');
+    const togglePreviewBtn = document.getElementById('togglePreview');
+
+    function runCode() {
+      preview.srcdoc = codeInput.value;
+    }
+
+    function selectAllCode() {
+      codeInput.focus();
+      codeInput.select();
+    }
+
+    function copyCode() {
+      selectAllCode();
+      document.execCommand('copy');
+      alert('Code copied to clipboard!');
+    }
+
+    function loadFile(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          codeInput.value = e.target.result;
+          runCode();
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function saveFile() {
+      const blob = new Blob([codeInput.value], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'preview.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Maximize/minimize logic
+    function clearMax() {
+      layout.classList.remove('max-code', 'max-preview');
+      toggleCodeBtn.textContent = '⛶';
+      togglePreviewBtn.textContent = '⛶';
+    }
+
+    toggleCodeBtn.addEventListener('click', () => {
+      if (layout.classList.contains('max-code')) {
+        clearMax();               // back to split view
+      } else {
+        layout.classList.remove('max-preview');
+        layout.classList.add('max-code');
+        toggleCodeBtn.textContent = '🗗';   // restore icon
+        togglePreviewBtn.textContent = '⛶';
+      }
+    });
+
+    togglePreviewBtn.addEventListener('click', () => {
+      if (layout.classList.contains('max-preview')) {
+        clearMax();               // back to split view
+      } else {
+        layout.classList.remove('max-code');
+        layout.classList.add('max-preview');
+        togglePreviewBtn.textContent = '🗗';
+        toggleCodeBtn.textContent = '⛶';
+      }
+    });
+
+    // Auto-run on load and on input change
+    runCode();
+    codeInput.addEventListener('input', runCode);
+  </script>
+</body>
+</html>
